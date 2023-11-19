@@ -74,6 +74,16 @@ jobs:
           recursive_exclusions: '*.map *.pdb changelog'
           path: '.'
 
+      - name: MD5 for Zip Archive
+        uses: deep-soft/sha-checksums@v1
+        with:
+          type: 'md5'
+          filename: '${{ env.PROG_NAME }}.${{ matrix.build_config }}.${{ matrix.platform_sln }}.${{ env.VERSION }}.zip.md5'
+          directory: '${{ matrix.platform_sln }}/${{ matrix.build_config }}'
+          path: '${{ env.PROG_NAME }}.${{ matrix.build_config }}.${{ matrix.platform_sln }}.${{ env.VERSION }}.zip'
+          ignore_git: true
+          # output env.SHA_SUMS
+
       - name: Upload zip
         continue-on-error: true
         uses: deep-soft/upload-artifact@main
@@ -90,12 +100,14 @@ jobs:
 #            ${{ env.LIST_File }}
           files: |
             ${{ env.ZIP_RELEASE_ARCHIVE }}
+            ${{ env.SHA_SUMS }}
 
       - name: Prepare latest Release
         continue-on-error: false
         shell: bash
         run: |
           mv ${{ env.ZIP_RELEASE_ARCHIVE }} ${{ env.PROG_NAME }}.${{ matrix.platform_name }}.zip
+          mv ${{ env.SHA_SUMS }} ${{ env.PROG_NAME }}.${{ matrix.platform_name }}.zip.md5
           echo "${{ env.VERSION }}" > ${{ env.PROG_NAME }}-latest.txt
 
       - name: Publish latest Release
@@ -107,4 +119,5 @@ jobs:
           body: "${{ env.PROG_NAME }} latest: v${{ env.VERSION }}"
           files: |
             ${{ env.PROG_NAME }}.${{ matrix.platform_name }}.zip
+            ${{ env.PROG_NAME }}.${{ matrix.platform_name }}.zip.md5
             ${{ env.PROG_NAME }}-latest.txt
